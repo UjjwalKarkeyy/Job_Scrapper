@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright, Playwright
 
 ''' Getting all the paths set '''
 
-linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_TPR=&f_E=1&position=1&pageNum=0"
+linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_E=1&f_TPR=r604800&position=1&pageNum=0"
 
 internsathi_path = "https://internsathi.com/internships?sort=NEWEST"
 
@@ -32,7 +32,7 @@ def run(playwright: Playwright):
 
         if linkedin_close_button:
             linkedin_close_button.click()
-            linkedin_page.wait_for_timeout(1000)
+            # linkedin_page.wait_for_timeout()
 
         linkedin_page.wait_for_load_state("networkidle") # Waits till all the JS is loaded and there are no request for 500ms
         linkedin_links = linkedin_page.query_selector_all(".base-card__full-link")
@@ -46,17 +46,21 @@ def run(playwright: Playwright):
 
             for link in linkedin_links:
                 linkedin_href = link.get_attribute("href")
-                linkedin_details_page.wait_for_load_state("networkidle")
 
                 if linkedin_href:
+                    
+                    try:
+                        
+                        linkedin_details_page.goto(linkedin_href)
+                        linkedin_details_page.wait_for_load_state("networkidle")
 
-                    linkedin_details_page.goto(linkedin_href)
+                        linkedin_close_button = linkedin_details_page.query_selector("button[aria-label='Dismiss']")
+                        if linkedin_close_button:
+                            linkedin_close_button.click(force=True)
+                            linkedin_details_page.wait_for_timeout(100)
 
-                    linkedin_close_button = linkedin_details_page.query_selector("button[aria-label='Dismiss']")
-                    if linkedin_close_button:
-                        linkedin_close_button.click(force=True)
-                        linkedin_details_page.wait_for_timeout(1000)
-
+                    except Exception as e:
+                        pass
 
                     linkedin_title = linkedin_details_page.query_selector(".top-card-layout__title").inner_text()
                     linkedin_company = linkedin_details_page.query_selector(".topcard__org-name-link").inner_text()
