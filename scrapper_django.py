@@ -2,21 +2,16 @@ from playwright.sync_api import sync_playwright, Playwright
 
 ''' Getting all the paths set '''
 
-linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_E=1&f_TPR=r604800&position=1&pageNum=0"
+linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_JT=I&f_TPR=&f_E=1&position=1&pageNum=0"
 
 internsathi_path = "https://internsathi.com/internships?sort=NEWEST"
-
-intern_nepal_path = "https://internepal.com.np/vacancy-list?type=internship&keyword=Intern"
-
-internship_in_nepal_path = "https://internshipinnepal.com/jobs-list-v1/?filter-title=Intern&filter-distance=50&filter-type=127&filter-date-posted=all"
-
 
 ''' Fetching the content in the form of html from the paths '''
 
 def run(playwright: Playwright):
 
     brave = playwright.chromium
-    browser = brave.launch(headless=False)
+    browser = brave.launch()
 
     try:
         # For internsathi
@@ -61,13 +56,17 @@ def run(playwright: Playwright):
 
                     except Exception as e:
                         pass
-
-                    linkedin_title = linkedin_details_page.query_selector(".top-card-layout__title").inner_text()
-                    linkedin_company = linkedin_details_page.query_selector(".topcard__org-name-link").inner_text()
-                    location_el = linkedin_details_page.query_selector(".topcard__flavor.topcard__flavor--bullet")
-                    linkedin_location = location_el.inner_text().strip() if location_el else "N/A"
+                    
+                    try:
+                        linkedin_title = linkedin_details_page.query_selector(".top-card-layout__title").inner_text()
+                        linkedin_company = linkedin_details_page.query_selector(".topcard__org-name-link").inner_text()
+                        location_el = linkedin_details_page.query_selector(".topcard__flavor.topcard__flavor--bullet")
+                        linkedin_location = location_el.inner_text().strip() if location_el else "N/A"
                    
-                    print(f"Title: {linkedin_title}\nCompany: {linkedin_company}\nLocation: {linkedin_location}\nApply: {linkedin_href}\n")
+                        print(f"Title: {linkedin_title}\nCompany: {linkedin_company}\nLocation: {linkedin_location}\nApply: {linkedin_href}\n")
+
+                    except AttributeError as e:
+                        pass
 
             print("Opportunities at Internsathi:\n")
 
