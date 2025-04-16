@@ -1,12 +1,17 @@
 from playwright.sync_api import sync_playwright, Playwright
-
-''' Getting all the paths set '''
-
-linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_JT=I&f_TPR=&f_E=1&position=1&pageNum=0"
-
-internsathi_path = "https://internsathi.com/internships?sort=NEWEST"
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 scrap_site = {
+
+    "internepal" : {
+
+        "main_link" : "https://internepal.com.np/vacancy-list?type=internship",
+        "query_selector": "div.category_box div.view_more_apply_btn a",
+        "dismiss_btn": "button[aria-label='Dismiss']",
+        "title": "div.main_information_des_badge h6",
+        "company": "div.company_name_badge",
+        "location": "div.location",
+    },
 
     "internsathi" : {
 
@@ -15,16 +20,7 @@ scrap_site = {
         "title": "p.font-medium",
         "company": "a.text-brand-red",
         "location": "p.text-t-xs",
-    },
-
-    "linkedin" : {
-
-        "main_link" :  "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_JT=I&f_TPR=&f_E=1&position=1&pageNum=0",
-        "query_selector": ".base-card__full-link",
-        "dismiss_btn": "button[aria-label='Dismiss']",
-        "title": ".top-card-layout__title",
-        "company": ".topcard__org-name-link",
-        "location": ".topcard__flavor.topcard__flavor--bullet",
+        "application_deadline": "div.sm\\:w-auto.w-full p.mt-4 + p.font-medium",
     },
 }
 
@@ -38,17 +34,12 @@ def run(playwright: Playwright):
                 page = browser.new_page()
                 page.goto(scrap_site[site]["main_link"])
 
-                if page.is_visible('div#base-contextual-sign-in-modal section[aria-modal="true"]'):
-
-                    linkedin_close_button = page.query_selector(scrap_site[site]["dismiss_btn"]) # For closing the pop up sign in message in linkedin
-
-                    if linkedin_close_button:
-                        linkedin_close_button.click()
                 try:
                     page.wait_for_load_state("networkidle")
                     page_links = page.query_selector_all(scrap_site[site]["query_selector"])
 
-                except TimeoutError as e:
+                except PlaywrightTimeoutError as e:
+                    print("Error: ", e)
                     continue
 
                 if page_links:
@@ -69,36 +60,37 @@ def run(playwright: Playwright):
                             details_page.goto(href) 
                             details_page.wait_for_load_state("networkidle")   
                         
-                        except TimeoutError as e:
+                        except PlaywrightTimeoutError as e:
+                            print("Error: ", e)
                             continue
 
-                        if page.is_visible('div#base-contextual-sign-in-modal section[aria-modal="true"]'):
-
-                            linkedin_close_button = page.query_selector(scrap_site[site]["dismiss_btn"]) # For closing the pop up sign in message in linkedin
-
-                            if linkedin_close_button:
-                                linkedin_close_button.click(force=True)
-                                details_page.wait_for_timeout(1000)  
-
-                        if site == "linkedin":    
-                            location_el = details_page.query_selector(scrap_site[site]["location"])
-                            location = location_el.inner_text().strip() if location_el else "N/A"
-
-                        else:
-                            location_el = details_page.query_selector(scrap_site[site]["location"])
-                            location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A"
-                        
                         try:
 
                             title_el = details_page.query_selector(scrap_site[site]["title"]).inner_text() 
-                            company_el = details_page.query_selector(scrap_site[site]["company"]).inner_text() 
+                            company_el = details_page.query_selector(scrap_site[site]["company"]).inner_text()
+                            location_el = details_page.query_selector(scrap_site[site]["location"])
+
+                            if site == "internepal":
+                                
+                                deadline_el = details_page.eval_on_selector_all( 
+                                                ".duration_icons",
+                                                "elements => elements[2][1]")
+
+                            else:
+                                deadline_el = details_page.query_selector(scrap_site[site]["application_deadline"])
+                            
+                            print(deadline_el.inner_text())
+
 
                             title = title_el if title_el else "N/A"
                             company = company_el if company_el else "N/A"
-
-                            print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\n")
+                            location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A" 
+                            deadline = deadline_el.inner_text() if deadline_el else "N/A" 
+                            print(deadline)
+                            # print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
 
                         except AttributeError as e:
+                            print("Error: ", e)
                             continue
 
                 else:
