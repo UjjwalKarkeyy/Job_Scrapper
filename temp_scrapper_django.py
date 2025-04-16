@@ -8,6 +8,15 @@ internsathi_path = "https://internsathi.com/internships?sort=NEWEST"
 
 scrap_site = {
 
+    "internsathi" : {
+
+        "main_link" : "https://internsathi.com/internships?sort=NEWEST",
+        "query_selector": "a",
+        "title": "p.font-medium",
+        "company": "a.text-brand-red",
+        "location": "p.text-t-xs",
+    },
+
     "linkedin" : {
 
         "main_link" :  "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_JT=I&f_TPR=&f_E=1&position=1&pageNum=0",
@@ -17,15 +26,6 @@ scrap_site = {
         "company": ".topcard__org-name-link",
         "location": ".topcard__flavor.topcard__flavor--bullet",
     },
-
-    "internsathi" : {
-
-        "main_link" : "https://internsathi.com/internships?sort=NEWEST",
-        "query_selector": "a",
-        "title": "p.font-medium",
-        "company": "a.text-brand-red",
-        "location": "p.text-t-xs",
-    }
 }
 
 def run(playwright: Playwright):
@@ -44,8 +44,12 @@ def run(playwright: Playwright):
 
                     if linkedin_close_button:
                         linkedin_close_button.click()
+                try:
+                    page.wait_for_load_state("networkidle")
+                    page_links = page.query_selector_all(scrap_site[site]["query_selector"])
 
-                page_links = page.query_selector_all(scrap_site[site]["query_selector"])
+                except TimeoutError as e:
+                    continue
 
                 if page_links:
                     details_page = browser.new_page()
@@ -58,8 +62,15 @@ def run(playwright: Playwright):
                         if site == "internsathi" and href.startswith("/internships/"):
                             href = "https://internsathi.com" + href
 
-                        details_page.goto(href, wait_until="load")    
-                        # details_page.wait_for_load_state("networkidle") 
+                        elif site == "internsathi":
+                            continue
+                        
+                        try:
+                            details_page.goto(href) 
+                            details_page.wait_for_load_state("networkidle")   
+                        
+                        except TimeoutError as e:
+                            continue
 
                         if page.is_visible('div#base-contextual-sign-in-modal section[aria-modal="true"]'):
 
@@ -67,22 +78,28 @@ def run(playwright: Playwright):
 
                             if linkedin_close_button:
                                 linkedin_close_button.click(force=True)
-                                details_page.wait_for_timeout(100) 
-                            
+                                details_page.wait_for_timeout(1000)  
+
                         if site == "linkedin":    
                             location_el = details_page.query_selector(scrap_site[site]["location"])
                             location = location_el.inner_text().strip() if location_el else "N/A"
 
                         else:
-                            location = details_page.query_selector(scrap_site[site]["location"]).inner_text().split("\n")[0].strip()
+                            location_el = details_page.query_selector(scrap_site[site]["location"])
+                            location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A"
                         
                         try:
-                            title = details_page.query_selector(scrap_site[site]["title"]).inner_text()
-                            company = details_page.query_selector(scrap_site[site]["company"]).inner_text()
+
+                            title_el = details_page.query_selector(scrap_site[site]["title"]).inner_text() 
+                            company_el = details_page.query_selector(scrap_site[site]["company"]).inner_text() 
+
+                            title = title_el if title_el else "N/A"
+                            company = company_el if company_el else "N/A"
+
                             print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\n")
 
                         except AttributeError as e:
-                            pass
+                            continue
 
                 else:
                     print("Link not Found!")
