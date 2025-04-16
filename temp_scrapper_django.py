@@ -11,6 +11,7 @@ scrap_site = {
         "title": "div.main_information_des_badge h6",
         "company": "div.company_name_badge",
         "location": "div.location",
+        "application_deadline": "div.duration_stippned_application",
     },
 
     "internsathi" : {
@@ -71,23 +72,25 @@ def run(playwright: Playwright):
                             location_el = details_page.query_selector(scrap_site[site]["location"])
 
                             if site == "internepal":
-                                
-                                deadline_el = details_page.eval_on_selector_all( 
-                                                ".duration_icons",
-                                                "elements => elements[2][1]")
+                                   deadline = page.evaluate("""
+                                                () => {
+                                                    const icons = document.querySelectorAll('.duration_icons');
+                                                    if (icons.length < 3) return null;
+                                                    const durationsDiv = icons[2].querySelector('.durations');
+                                                    if (!durationsDiv) return null;
+                                                    const match = durationsDiv.textContent.match(/\\d{4}-\\d{2}-\\d{2}/);
+                                                    return match ? match[0] : null;
+                                                }
+                                            """)
 
                             else:
                                 deadline_el = details_page.query_selector(scrap_site[site]["application_deadline"])
-                            
-                            print(deadline_el.inner_text())
-
+                                deadline = deadline_el.inner_text() if deadline_el else "N/A" 
 
                             title = title_el if title_el else "N/A"
                             company = company_el if company_el else "N/A"
                             location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A" 
-                            deadline = deadline_el.inner_text() if deadline_el else "N/A" 
-                            print(deadline)
-                            # print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
+                            print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
 
                         except AttributeError as e:
                             print("Error: ", e)
