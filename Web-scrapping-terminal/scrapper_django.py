@@ -1,100 +1,106 @@
 from playwright.sync_api import sync_playwright, Playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-''' Getting all the paths set '''
+scrap_site = {
 
-linkedin_path = "https://www.linkedin.com/jobs/search?keywords=&location=Kathmandu&geoId=100665265&distance=25&f_JT=I&f_TPR=&f_E=1&position=1&pageNum=0"
+    "internepal" : {
 
-internsathi_path = "https://internsathi.com/internships?sort=NEWEST"
+        "main_link" : "https://internepal.com.np/vacancy-list?type=internship",
+        "query_selector": "div.category_box div.view_more_apply_btn a",
+        "dismiss_btn": "button[aria-label='Dismiss']",
+        "title": "div.main_information_des_badge h6",
+        "company": "div.company_name_badge",
+        "location": "div.location",
+        "application_deadline": "div.duration_stippned_application",
+    },
 
-''' Fetching the content in the form of html from the paths '''
+    "internsathi" : {
+
+        "main_link" : "https://internsathi.com/internships?sort=NEWEST",
+        "query_selector": "a",
+        "title": "p.font-medium",
+        "company": "a.text-brand-red",
+        "location": "p.text-t-xs",
+        "application_deadline": "div.sm\\:w-auto.w-full p.mt-4 + p.font-medium",
+    },
+}
 
 def run(playwright: Playwright):
 
-    brave = playwright.chromium
-    browser = brave.launch()
-
+    chrome = playwright.chromium
+    browser = chrome.launch()
     try:
-        # For internsathi
-        internsathi_page = browser.new_page()
-        internsathi_page.goto(internsathi_path)
-        internsathi_page.wait_for_load_state("networkidle") # Waits till all the JS is loaded and there are no request for 500ms
-        internsathi_links = internsathi_page.query_selector_all("a")
+        for site in scrap_site:
 
-        # For linkedin
-        linkedin_page = browser.new_page()
-        linkedin_page.goto(linkedin_path)
-        linkedin_close_button = linkedin_page.query_selector("button[aria-label='Dismiss']") # For closing the pop up sign in message in linkedin
+                page = browser.new_page()
+                page.goto(scrap_site[site]["main_link"])
 
-        if linkedin_close_button:
-            linkedin_close_button.click()
-            # linkedin_page.wait_for_timeout()
+                try:
+                    page.wait_for_load_state("networkidle")
+                    page_links = page.query_selector_all(scrap_site[site]["query_selector"])
 
-        linkedin_page.wait_for_load_state("networkidle") # Waits till all the JS is loaded and there are no request for 500ms
-        linkedin_links = linkedin_page.query_selector_all(".base-card__full-link")
+                except PlaywrightTimeoutError as e:
+                    print("Error: ", e)
+                    continue
 
-        if internsathi_links and linkedin_links:
+                if page_links:
+                    details_page = browser.new_page()
 
-            internsathi_details_page = browser.new_page()
-            linkedin_details_page = browser.new_page()
+                    print(f"Opportunities in {site} site:\n")
 
-            print("Opportunities at LinkedIn:\n")
+                    for link in page_links:
+                        href = link.get_attribute("href")
 
-            for link in linkedin_links:
-                linkedin_href = link.get_attribute("href")
+                        if site == "internsathi" and href.startswith("/internships/"):
+                            href = "https://internsathi.com" + href
 
-                if linkedin_href:
-                    
-                    try:
+                        elif site == "internsathi":
+                            continue
                         
-                        linkedin_details_page.goto(linkedin_href)
-                        linkedin_details_page.wait_for_load_state("networkidle")
+                        try:
+                            details_page.goto(href) 
+                            details_page.wait_for_load_state("networkidle")   
+                        
+                        except PlaywrightTimeoutError as e:
+                            print("Error: ", e)
+                            continue
 
-                        linkedin_close_button = linkedin_details_page.query_selector("button[aria-label='Dismiss']")
-                        if linkedin_close_button:
-                            linkedin_close_button.click(force=True)
-                            linkedin_details_page.wait_for_timeout(100)
+                        try:
 
-                    except Exception as e:
-                        pass
-                    
-                    try:
-                        linkedin_title = linkedin_details_page.query_selector(".top-card-layout__title").inner_text()
-                        linkedin_company = linkedin_details_page.query_selector(".topcard__org-name-link").inner_text()
-                        location_el = linkedin_details_page.query_selector(".topcard__flavor.topcard__flavor--bullet")
-                        linkedin_location = location_el.inner_text().strip() if location_el else "N/A"
-                   
-                        print(f"Title: {linkedin_title}\nCompany: {linkedin_company}\nLocation: {linkedin_location}\nApply: {linkedin_href}\n")
+                            title_el = details_page.query_selector(scrap_site[site]["title"]).inner_text() 
+                            company_el = details_page.query_selector(scrap_site[site]["company"]).inner_text()
+                            location_el = details_page.query_selector(scrap_site[site]["location"])
 
-                    except AttributeError as e:
-                        pass
+                            if site == "internepal":
+                                   deadline = page.evaluate("""
+                                                () => {
+                                                    const icons = document.querySelectorAll('.duration_icons');
+                                                    if (icons.length < 3) return null;
+                                                    const durationsDiv = icons[2].querySelector('.durations');
+                                                    if (!durationsDiv) return null;
+                                                    const match = durationsDiv.textContent.match(/\\d{4}-\\d{2}-\\d{2}/);
+                                                    return match ? match[0] : null;
+                                                }
+                                            """)
 
-            print("Opportunities at Internsathi:\n")
+                            else:
+                                deadline_el = details_page.query_selector(scrap_site[site]["application_deadline"])
+                                deadline = deadline_el.inner_text() if deadline_el else "N/A" 
 
-            for link in internsathi_links:
-                internsathi_href = link.get_attribute("href") 
+                            title = title_el if title_el else "N/A"
+                            company = company_el if company_el else "N/A"
+                            location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A" 
+                            print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
 
-                if internsathi_href and internsathi_href.startswith("/internships/"):
-                    internsathi_full_url = "https://internsathi.com/" + internsathi_href
-                    internsathi_details_page.goto(internsathi_full_url)
-                    internsathi_details_page.wait_for_load_state("networkidle")
+                        except AttributeError as e:
+                            print("Error: ", e)
+                            continue
 
-                    internsathi_title = internsathi_details_page.query_selector("p.font-medium").inner_text()
-                    internsathi_company = internsathi_details_page.query_selector("a.text-brand-red").inner_text()
-                    internsathi_location = internsathi_details_page.query_selector("p.text-t-xs").inner_text().split("\n")[0].strip()
-
-                    print(f"Title: {internsathi_title}\nCompany: {internsathi_company}\nLocation: {internsathi_location}\nApply: {internsathi_full_url}\n")
-
-            internsathi_details_page.close()
-            linkedin_details_page.close()
-
-        else:
-            print("No <a> tag found!")
+                else:
+                    print("Link not Found!")
 
     finally:
         browser.close()
-
-
-# links = [linkedin_path, internsathi_path, internship_in_nepal_path, intern_nepal_path]
 
 with sync_playwright() as playwright:
     run(playwright)
