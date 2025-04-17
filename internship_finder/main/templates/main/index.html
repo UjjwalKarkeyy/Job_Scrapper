@@ -1,10 +1,40 @@
+{% load static %}
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Internships</title>
+  <link rel="stylesheet" href="{% static 'main/main.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    Django is running!
+  <div class="container">
+    <h1>Internships</h1>
+    <div class="internship-list">
+
+      <!-- Example internship -->
+      <div class="internship-card">
+        <p class="label">Title</p>
+        <h2 class="title">Software Engineering Intern</h2>
+
+        <p class="label">Company</p>
+        <p class="company">Google</p>
+
+        <p class="label">Location</p>
+        <p class="location">Mountain View, CA</p>
+
+        <p class="label">Deadline</p>
+        <p class="deadline">April 30, 2025</p>
+
+        <button onclick="window.open('https://careers.google.com/internships', '_blank')" class="apply-btn">
+          Apply
+        </button>
+      </div>
+
+      <!-- More internship-card blocks go here -->
+
+    </div>
+  </div>
 </body>
 </html>

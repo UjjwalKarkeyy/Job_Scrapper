@@ -1,0 +1,85 @@
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #0f1115;
+    font-family: 'Inter', sans-serif;
+    color: #f0f0f0;
+  }
+  
+  .container {
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 0 20px;
+  }
+  
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 40px;
+    color: #ffffff;
+    text-align: center;
+  }
+  
+  .internship-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
+  
+  .internship-card {
+    background-color: #1a1d24;
+    border: 1px solid #2c2f36;
+    border-radius: 10px;
+    padding: 24px 28px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .internship-card:hover {
+    transform: translateY(-4px);
+    border-color: #3e89ff;
+  }
+  
+  .label {
+    font-size: 0.8rem;
+    color: #888;
+    margin: 10px 0 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: #ffffff;
+  }
+  
+  .company,
+  .location,
+  .deadline {
+    font-size: 1rem;
+    margin: 0 0 10px;
+    color: #ddd;
+  }
+  
+  .apply-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #3e89ff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .apply-btn:hover {
+    background-color: #256ef3;
+  }
+  
