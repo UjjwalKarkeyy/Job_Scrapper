@@ -90,7 +90,8 @@ def run(playwright: Playwright):
                             title = title_el if title_el else "N/A"
                             company = company_el if company_el else "N/A"
                             location = location_el.inner_text().split("\n")[0].strip() if location_el else "N/A" 
-                            print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
+                            # print(f"Title: {title}\nCompany: {company}\nLocation: {location}\nApply: {href}\nDeadline: {deadline}\n")
+                            print(type(title),type(company),type(location),type(href),type(deadline))
 
                         except AttributeError as e:
                             print("Error: ", e)

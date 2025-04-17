@@ -1,3 +1,9 @@
 from django.db import models
 
-# Create your models here.
+class Internships(models.Model):
+
+    title = models.CharField()
+    company = models.CharField()
+    location = models.CharField()
+    deadline = models.DateField()
+    apply = models.URLField()
