@@ -44,7 +44,6 @@ def run(playwright: Playwright):
                     continue
 
                 if page_links:
-                    details_page = browser.new_page()
 
                     print(f"Opportunities in {site} site:\n")
 
@@ -58,6 +57,7 @@ def run(playwright: Playwright):
                             continue
                         
                         try:
+                            details_page = browser.new_page()
                             details_page.goto(href) 
                             details_page.wait_for_load_state("networkidle")   
                         
