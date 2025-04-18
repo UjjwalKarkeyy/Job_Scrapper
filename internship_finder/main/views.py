@@ -5,5 +5,6 @@ from .models import Internships
 class Main_view(ListView):
 
     model = Internships
+    paginate_by = 4
 
 
