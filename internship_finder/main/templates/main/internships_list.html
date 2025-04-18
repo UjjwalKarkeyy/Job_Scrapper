@@ -1,0 +1,26 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    {% for object in object_list %}
+    
+        <!-- Example internship -->
+        <div class="internship-card">
+          <p class="label">Title</p>
+          <h2 class="title">{{ object.title }}</h2>
+
+          <p class="label">Company</p>
+          <p class="company">{{ object.company }}</p>
+
+          <p class="label">Location</p>
+          <p class="location">{{ object.location }}</p>
+
+          <p class="label">Deadline</p>
+          <p class="deadline">{{ object.deadline }}</p>
+
+          <a href="{{ object.apply }}" class="btn-primary"></a>
+        </div>
+    {% endfor %}
+{% endblock content %}
+
