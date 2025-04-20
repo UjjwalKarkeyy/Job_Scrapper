@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('',include('main.urls'))   
-]
+        path('',include('main.urls'))   
+    ]
+
+if settings.DEBUG:
+
+    urlpatterns += [path('gurkha-admin-64x/', admin.site.urls)]
+    
