@@ -11,6 +11,8 @@ django.setup()
 
 from main.models import Internships
 
+Internships.objects.all().delete()
+
 scrap_site = {
     "internepal": {
         "main_link": "https://internepal.com.np/vacancy-list?type=internship",
@@ -33,7 +35,7 @@ scrap_site = {
 
 async def run(playwright):
 
-    flag = True
+    flag = False
     browser = await playwright.chromium.launch(headless=True)
     try:
         for site in scrap_site:
@@ -102,7 +104,6 @@ async def run(playwright):
                                 deadline=deadline,
                                 apply=href
                             )
-
                             flag = True
 
                     except Exception as e:
