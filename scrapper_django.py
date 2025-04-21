@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'internship_finder.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'internship_finder.scrapper_settings')
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 
